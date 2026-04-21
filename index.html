@@ -8,9 +8,9 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #f5f4f0;
+    --bg: #f0efe9;
     --surface: #ffffff;
-    --surface2: #eeede9;
+    --surface2: #e8e7e1;
     --border: rgba(0,0,0,0.12);
     --border2: rgba(0,0,0,0.22);
     --text: #1a1a18;
@@ -19,6 +19,9 @@
     --radius-lg: 12px;
     --accent: #5340b7;
     --accent-light: #eeedfe;
+
+    --tile-shadow: rgba(0,0,0,0.18);
+    --tile-depth: 5px;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -32,7 +35,26 @@
       --text2: #a0a09a;
       --accent: #9488ee;
       --accent-light: #26215c;
+      --tile-shadow: rgba(0,0,0,0.5);
+      --tile-depth: 5px;
     }
+  }
+
+  /* Tile color palette — 4 groups of 4 (row by row) */
+  /* Purple: 1–4 */
+  .tc-1,.tc-2,.tc-3,.tc-4   { --tf: #AFA9EC; --tt: #8880D8; --ts: #534AB7; --tx: #26215C; }
+  /* Teal: 5–8 */
+  .tc-5,.tc-6,.tc-7,.tc-8   { --tf: #5DCAA5; --tt: #1D9E75; --ts: #0F6E56; --tx: #04342C; }
+  /* Coral: 9–12 */
+  .tc-9,.tc-10,.tc-11,.tc-12 { --tf: #F0997B; --tt: #D85A30; --ts: #993C1D; --tx: #4A1B0C; }
+  /* Amber: 13–15 */
+  .tc-13,.tc-14,.tc-15       { --tf: #FAC775; --tt: #EF9F27; --ts: #BA7517; --tx: #412402; }
+
+  @media (prefers-color-scheme: dark) {
+    .tc-1,.tc-2,.tc-3,.tc-4    { --tf: #3C3489; --tt: #534AB7; --ts: #26215C; --tx: #CECBF6; }
+    .tc-5,.tc-6,.tc-7,.tc-8    { --tf: #085041; --tt: #0F6E56; --ts: #04342C; --tx: #9FE1CB; }
+    .tc-9,.tc-10,.tc-11,.tc-12 { --tf: #712B13; --tt: #993C1D; --ts: #4A1B0C; --tx: #F5C4B3; }
+    .tc-13,.tc-14,.tc-15       { --tf: #633806; --tt: #854F0B; --ts: #412402; --tx: #FAC775; }
   }
 
   body {
@@ -56,7 +78,6 @@
 
   #app { width: 100%; max-width: 380px; }
 
-  /* Stats */
   #stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -86,7 +107,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Win banner */
   #win-banner {
     display: none;
     background: var(--accent-light);
@@ -104,35 +124,129 @@
   #board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    gap: 8px;
     margin-bottom: 1rem;
     aspect-ratio: 1;
+    background: var(--surface2);
+    border-radius: var(--radius-lg);
+    padding: 8px;
+    border: 0.5px solid var(--border2);
+  }
+
+  /* 3D tile wrapper */
+  .tile-wrap {
+    perspective: 300px;
+    position: relative;
   }
 
   .tile {
-    border: 0.5px solid var(--border2);
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transform-style: preserve-3d;
+    transition: transform 0.08s ease, opacity 0.08s ease;
+  }
+
+  /* Face */
+  .tile .face {
+    position: absolute;
+    inset: 0;
+    background: var(--tf);
     border-radius: var(--radius-md);
-    background: var(--surface);
+    border: 0.5px solid var(--ts);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
     font-weight: 500;
-    cursor: pointer;
-    color: var(--text);
-    user-select: none;
-    transition: background .12s, transform .08s;
-    -webkit-tap-highlight-color: transparent;
+    color: var(--tx);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+    z-index: 2;
+    transform: translateZ(var(--tile-depth));
   }
 
-  .tile:hover  { background: var(--surface2); }
-  .tile:active { transform: scale(.94); }
+  /* Top bevel */
+  .tile .bevel-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: var(--tile-depth);
+    background: var(--tt);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border: 0.5px solid var(--ts);
+    z-index: 0;
+    transform: translateY(calc(-1 * var(--tile-depth) + 1px));
+    clip-path: polygon(0% 100%, 4px 0%, calc(100% - 4px) 0%, 100% 100%);
+  }
 
-  .tile.empty {
-    background: transparent;
-    border-color: transparent;
-    cursor: default;
+  /* Right bevel */
+  .tile .bevel-right {
+    position: absolute;
+    top: 2px; right: 0; bottom: 0;
+    width: var(--tile-depth);
+    background: var(--ts);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    border: 0.5px solid var(--ts);
+    z-index: 0;
+    transform: translateX(calc(var(--tile-depth) - 1px));
+    clip-path: polygon(0% 0%, 100% 4px, 100% calc(100% - 4px), 0% 100%);
+  }
+
+  /* Shadow cast below */
+  .tile::after {
+    content: '';
+    position: absolute;
+    bottom: calc(-1 * var(--tile-depth) - 4px);
+    left: 10%;
+    right: 10%;
+    height: 6px;
+    background: var(--tile-shadow);
+    border-radius: 50%;
+    filter: blur(3px);
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .tile:hover .face {
+    filter: brightness(1.06);
+  }
+
+  .tile:active {
+    transform: translateY(calc(var(--tile-depth) - 1px));
+  }
+
+  .tile:active .face {
+    transform: translateZ(1px);
+  }
+
+  .tile:active::after {
+    opacity: 0.2;
+    bottom: -3px;
+  }
+
+  /* Slide animation */
+  .tile-wrap.sliding {
+    z-index: 10;
+  }
+
+  /* Empty cell */
+  .tile-wrap.empty .tile {
+    display: none;
     pointer-events: none;
+  }
+
+  .tile-wrap.empty {
+    background: rgba(0,0,0,0.06);
+    border-radius: var(--radius-md);
+    pointer-events: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tile-wrap.empty { background: rgba(255,255,255,0.04); }
   }
 
   /* Controls */
@@ -153,7 +267,6 @@
   #controls button:hover  { background: var(--surface2); }
   #controls button:active { transform: scale(.97); }
 
-  /* Keyboard hint */
   #hint { text-align: center; font-size: 12px; color: var(--text2); margin-top: .75rem; }
 </style>
 </head>
@@ -169,7 +282,7 @@
   </div>
 
   <div id="win-banner">
-    <h2>Puzzle solved!</h2>
+    <h2>Puzzle solved! 🎉</h2>
     <p id="win-detail"></p>
   </div>
 
@@ -188,12 +301,12 @@
   'use strict';
 
   const GOAL = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];
-  const STORAGE_KEY = 'puzzle15_best_v1';
+  const STORAGE_KEY = 'puzzle15_best_v2';
 
   let tiles = [], emptyIdx = 15, initState = [];
   let moves = 0, seconds = 0, timerID = null, started = false, won = false;
+  let animating = false;
 
-  /* ── helpers ─────────────────────────────── */
   const row = i => Math.floor(i / 4);
   const col = i => i % 4;
   const adj = (a, b) =>
@@ -223,7 +336,6 @@
     return arr;
   }
 
-  /* ── storage ─────────────────────────────── */
   function loadBest() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
   }
@@ -231,7 +343,6 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ moves: m, time: t })); } catch {}
   }
 
-  /* ── timer ───────────────────────────────── */
   function startTimer() {
     timerID = setInterval(() => {
       seconds++;
@@ -244,18 +355,39 @@
     return m + ':' + (sec < 10 ? '0' : '') + sec;
   }
 
-  /* ── render ──────────────────────────────── */
   function render() {
     const board = document.getElementById('board');
     board.innerHTML = '';
     tiles.forEach((v, i) => {
-      const el = document.createElement('div');
-      el.className = 'tile' + (v === 0 ? ' empty' : '');
-      el.textContent = v === 0 ? '' : v;
-      el.setAttribute('role', 'gridcell');
-      el.setAttribute('aria-label', v === 0 ? 'empty' : String(v));
-      if (v !== 0) el.addEventListener('click', () => move(i));
-      board.appendChild(el);
+      const wrap = document.createElement('div');
+      wrap.className = 'tile-wrap' + (v === 0 ? ' empty' : ' tc-' + v);
+      wrap.dataset.index = i;
+
+      if (v !== 0) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.setAttribute('role', 'gridcell');
+        tile.setAttribute('aria-label', String(v));
+
+        const face = document.createElement('div');
+        face.className = 'face';
+        face.textContent = v;
+
+        const bevelTop = document.createElement('div');
+        bevelTop.className = 'bevel-top';
+
+        const bevelRight = document.createElement('div');
+        bevelRight.className = 'bevel-right';
+
+        tile.appendChild(bevelTop);
+        tile.appendChild(bevelRight);
+        tile.appendChild(face);
+
+        wrap.appendChild(tile);
+        wrap.addEventListener('click', () => move(i));
+      }
+
+      board.appendChild(wrap);
     });
   }
 
@@ -265,22 +397,64 @@
     document.getElementById('s-bt').textContent = b ? fmt(b.time) : '—';
   }
 
-  /* ── move logic ──────────────────────────── */
+  function getSlideDir(from, to) {
+    const dr = row(to) - row(from);
+    const dc = col(to) - col(from);
+    return { dx: dc, dy: dr };
+  }
+
   function move(i) {
-    if (won || !adj(i, emptyIdx)) return;
-    [tiles[i], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[i]];
-    emptyIdx = i;
-    moves++;
-    document.getElementById('s-moves').textContent = moves;
-    if (!started) { started = true; startTimer(); }
-    render();
-    checkWin();
+    if (won || animating || !adj(i, emptyIdx)) return;
+
+    const board = document.getElementById('board');
+    const wraps = board.querySelectorAll('.tile-wrap');
+    const movingWrap = wraps[i];
+    const emptyWrap  = wraps[emptyIdx];
+
+    // figure out direction
+    const dir = getSlideDir(i, emptyIdx);
+    const cellSize = movingWrap.offsetWidth + 8; // gap = 8px
+    const tx = dir.dx * cellSize;
+    const ty = dir.dy * cellSize;
+
+    animating = true;
+
+    // animate the tile sliding
+    const tileEl = movingWrap.querySelector('.tile');
+    if (tileEl) {
+      tileEl.style.transition = 'transform 0.13s cubic-bezier(0.25,0.46,0.45,0.94)';
+      tileEl.style.transform = `translate(${tx}px, ${ty}px)`;
+    }
+
+    setTimeout(() => {
+      // commit state
+      [tiles[i], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[i]];
+      emptyIdx = i;
+      moves++;
+      document.getElementById('s-moves').textContent = moves;
+      if (!started) { started = true; startTimer(); }
+      animating = false;
+      render();
+      checkWin();
+    }, 130);
   }
 
   function checkWin() {
     if (!tiles.every((v, i) => v === GOAL[i])) return;
     won = true;
     stopTimer();
+
+    // brief celebration animation
+    const board = document.getElementById('board');
+    const allTiles = board.querySelectorAll('.tile');
+    allTiles.forEach((t, i) => {
+      setTimeout(() => {
+        t.style.transition = 'transform 0.2s ease';
+        t.style.transform = 'translateZ(var(--tile-depth)) scale(1.05)';
+        setTimeout(() => { t.style.transform = ''; }, 200);
+      }, i * 20);
+    });
+
     const b = loadBest();
     let newBest = false;
     if (!b || moves < b.moves || (moves === b.moves && seconds < b.time)) {
@@ -290,10 +464,11 @@
     updateBestDisplay();
     document.getElementById('win-detail').textContent =
       moves + ' moves · ' + fmt(seconds) + (newBest ? ' · New best!' : '');
-    document.getElementById('win-banner').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('win-banner').style.display = 'block';
+    }, 350);
   }
 
-  /* ── keyboard ────────────────────────────── */
   document.addEventListener('keydown', e => {
     if (e.key === 'n' || e.key === 'N') { newGame(); return; }
     if (e.key === 'r' || e.key === 'R') { resetGame(); return; }
@@ -307,7 +482,6 @@
     move(target);
   });
 
-  /* ── game control ────────────────────────── */
   window.newGame = function () {
     stopTimer();
     won = false; started = false; moves = 0; seconds = 0;
